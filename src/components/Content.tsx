@@ -1,34 +1,56 @@
-import { MovieCard } from './MovieCard';
+import { useEffect, useState } from "react";
+import { api } from "../services/api";
+import { MovieCard } from "./MovieCard";
+
+interface MovieProps {
+  imdbID: string;
+  Title: string;
+  Poster: string;
+  Ratings: Array<{
+    Source: string;
+    Value: string;
+  }>;
+  Runtime: string;
+}
 interface ContentProps {
-  movies: {
-    imdbID: string;
-    Title: string;
-    Poster: string;
-    Ratings: Array<{
-      Source: string;
-      Value: string;
-    }>;
-    Runtime: string;
-  }[],
   selectedGenre: {
     id: number;
-    name: 'action' | 'comedy' | 'documentary' | 'drama' | 'horror' | 'family';
+    name: "action" | "comedy" | "documentary" | "drama" | "horror" | "family";
     title: string;
-  }
+  };
 }
 
-export function Content({ movies, selectedGenre }: ContentProps) {
-  return <div className="container">
-    <header>
-      <span className="category">Categoria:<span> {selectedGenre.title}</span></span>
-    </header>
+export function Content({ selectedGenre }: ContentProps) {
+  const [movies, setMovies] = useState<MovieProps[]>([]);
 
-    <main>
-      <div className="movies-list">
-        {movies.map(movie => (
-          <MovieCard key ={movie.imdbID} title={movie.Title} poster={movie.Poster} runtime={movie.Runtime} rating={movie.Ratings[0].Value} />
-        ))}
-      </div>
-    </main>
-  </div>
+  useEffect(() => {
+    api
+      .get<MovieProps[]>(`movies/?Genre_id=${selectedGenre.id}`)
+      .then((response) => {
+        setMovies(response.data);
+      });
+  }, [selectedGenre.id]);
+  return (
+    <div className="container">
+      <header>
+        <span className="category">
+          Categoria:<span> {selectedGenre.title}</span>
+        </span>
+      </header>
+
+      <main>
+        <div className="movies-list">
+          {movies.map((movie) => (
+            <MovieCard
+              key={movie.imdbID}
+              title={movie.Title}
+              poster={movie.Poster}
+              runtime={movie.Runtime}
+              rating={movie.Ratings[0].Value}
+            />
+          ))}
+        </div>
+      </main>
+    </div>
+  );
 }
